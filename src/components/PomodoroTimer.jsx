@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Haptics, NotificationType, ImpactStyle } from '@capacitor/haptics';
 import { playTimerRingSound, playDingSound } from '../utils/sound';
 
-export default function PomodoroTimer({ history, onSaveSession }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export default function PomodoroTimer({ isOpen, onClose, history, onSaveSession }) {
   const [view, setView] = useState('setup'); // 'setup', 'running', 'history'
   
   // Setup State
@@ -115,20 +114,8 @@ export default function PomodoroTimer({ history, onSaveSession }) {
     ? ((workDuration * 60 - timeLeft) / (workDuration * 60)) * 100
     : ((breakDuration * 60 - timeLeft) / (breakDuration * 60)) * 100;
 
-  if (!isModalOpen) {
-    return (
-      <button 
-        className={`pomodoro-toggle-btn ${isActive ? 'active-timer' : ''}`}
-        onClick={() => setIsModalOpen(true)}
-        aria-label="Open Focus Timer"
-      >
-        {isActive ? (
-          <span className="pomo-floating-time">⏱️ {formatTime(timeLeft)}</span>
-        ) : (
-          '⏱️'
-        )}
-      </button>
-    );
+  if (!isOpen) {
+    return null;
   }
 
   return (
@@ -151,7 +138,7 @@ export default function PomodoroTimer({ history, onSaveSession }) {
             History
           </button>
         </div>
-        <button className="pomodoro-close" onClick={() => setIsModalOpen(false)} title="Minimize">➖</button>
+        <button className="pomodoro-close" onClick={onClose} title="Minimize">➖</button>
       </div>
 
         {view === 'setup' && (

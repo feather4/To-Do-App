@@ -11,7 +11,6 @@ import { restrictToVerticalAxis, restrictToParentElement } from '@dnd-kit/modifi
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import TaskItem from './TaskItem';
-import RewardShop from './RewardShop';
 import CalendarView from './CalendarView';
 import { playAddSound } from '../utils/sound';
 
@@ -22,9 +21,8 @@ const getTodayDateString = () => {
 };
 
 export default function TaskBoard({
-  tasks, rewards, totalTokens, onCompleteTask, onAddTask, onDeleteTask, onAddReward, onRedeemReward, onDragEnd
+  tasks, activeTab, onCompleteTask, onAddTask, onDeleteTask, onDragEnd
 }) {
-  const [activeTab, setActiveTab] = useState('daily');
   const [selectedCalendarDate, setSelectedCalendarDate] = useState(getTodayDateString());
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [isAdding, setIsAdding] = useState(false);
@@ -83,15 +81,7 @@ export default function TaskBoard({
   const handleDragEndInternal = async (event) => {
     lastOverId.current = null;
     onDragEnd(event);
-    // Vibrate when dropping the task into its new position
     await Haptics.impact({ style: ImpactStyle.Medium }).catch(() => { });
-  };
-
-  const handleTabSwitch = async (tab) => {
-    if (tab === activeTab) return;
-    await Haptics.impact({ style: ImpactStyle.Light }).catch(() => { });
-    setActiveTab(tab);
-    setTabKey(prev => prev + 1); // trigger stagger re-render
   };
 
   const handleFabToggle = async () => {
@@ -118,8 +108,6 @@ export default function TaskBoard({
     const allDone = filteredTasks.every(t => t.completed);
     if (allDone) {
       if (activeTab === 'daily') return { emoji: '🎉', text: "All done for today! Time to relax." };
-      if (activeTab === 'weekly') return { emoji: '🌟', text: "Incredible! You crushed your weekly goals." };
-      if (activeTab === 'monthly') return { emoji: '🏆', text: "Legendary! Monthly goals destroyed." };
       if (activeTab === 'calendar') return { emoji: '🎉', text: "All done for this date!" };
     }
     return null;
@@ -129,14 +117,6 @@ export default function TaskBoard({
 
   return (
     <div className="task-board">
-      <div className="tabs-container">
-        <button className={`tab-button ${activeTab === 'daily' ? 'active' : ''}`} onClick={() => handleTabSwitch('daily')}>Daily Goals</button>
-        <button className={`tab-button ${activeTab === 'weekly' ? 'active' : ''}`} onClick={() => handleTabSwitch('weekly')}>Weekly Goals</button>
-        <button className={`tab-button ${activeTab === 'monthly' ? 'active' : ''}`} onClick={() => handleTabSwitch('monthly')}>Monthly Goals</button>
-        <button className={`tab-button ${activeTab === 'calendar' ? 'active' : ''}`} onClick={() => handleTabSwitch('calendar')}>Calendar 📅</button>
-        <button className={`tab-button ${activeTab === 'rewards' ? 'active' : ''}`} onClick={() => handleTabSwitch('rewards')}>Rewards 🎁</button>
-      </div>
-
       {activeTab === 'daily' && dailyTasks.length > 0 && (
         <div className={`progress-container ${allDailyDone ? 'progress-complete' : ''}`}>
           <div className="progress-header">
@@ -149,30 +129,22 @@ export default function TaskBoard({
         </div>
       )}
 
-      {activeTab === 'rewards' ? (
-        <RewardShop
-          rewards={rewards}
-          totalTokens={totalTokens}
-          onAddReward={onAddReward}
-          onRedeemReward={onRedeemReward}
-        />
-      ) : (
-        <>
-          {activeTab === 'calendar' && (
-            <CalendarView 
-              tasks={tasks}
-              selectedDate={selectedCalendarDate}
-              onSelectDate={setSelectedCalendarDate}
-            />
-          )}
+      <>
+        {activeTab === 'calendar' && (
+          <CalendarView 
+            tasks={tasks}
+            selectedDate={selectedCalendarDate}
+            onSelectDate={setSelectedCalendarDate}
+          />
+        )}
 
-          <div className="board-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', marginTop: activeTab === 'calendar' ? '2rem' : '0' }}>
-            <h3 style={{ fontSize: '1.25rem', color: 'var(--text-main)', fontWeight: '700' }}>
-              {activeTab === 'daily' ? "Today's Focus" : activeTab === 'weekly' ? "This Week" : activeTab === 'monthly' ? "This Month" : `Tasks for ${selectedCalendarDate}`}
-            </h3>
-          </div>
+        <div className="board-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', marginTop: activeTab === 'calendar' ? '2rem' : '0' }}>
+          <h3 style={{ fontSize: '1.25rem', color: 'var(--text-main)', fontWeight: '700' }}>
+            {activeTab === 'daily' ? "Today's Focus" : `Tasks for ${selectedCalendarDate}`}
+          </h3>
+        </div>
 
-          <div className="task-list" key={tabKey}>
+        <div className="task-list" key={tabKey}>
             {emptyState && (
               <div className="empty-state">
                 <span className="empty-emoji">{emptyState.emoji}</span>
@@ -202,39 +174,38 @@ export default function TaskBoard({
             </DndContext>
           </div>
 
-          {/* FAB Backdrop */}
-          {isAdding && (
-            <div className="fab-backdrop" onClick={handleFabToggle} />
-          )}
+        {/* FAB Backdrop */}
+        {isAdding && (
+          <div className="fab-backdrop" onClick={handleFabToggle} />
+        )}
 
-          <div className="fab-container">
-            {isAdding && (
-              <form className="fab-form" onSubmit={handleAdd}>
-                <input
-                  ref={inputRef}
-                  type="text"
-                  className="fab-input"
-                  placeholder={`Add ${activeTab} goal...`}
-                  value={newTaskTitle}
-                  onChange={(e) => setNewTaskTitle(e.target.value)}
-                />
-                <button type="submit" className="fab-submit">Add</button>
-              </form>
-            )}
-            <button
-              className={`fab-button ${isAdding ? 'rotate' : ''}`}
-              onClick={handleFabToggle}
-              type="button"
-              aria-label={isAdding ? "Close" : "Add task"}
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-            </button>
-          </div>
-        </>
-      )}
+        <div className="fab-container">
+          {isAdding && (
+            <form className="fab-form" onSubmit={handleAdd}>
+              <input
+                ref={inputRef}
+                type="text"
+                className="fab-input"
+                placeholder={`Add ${activeTab} goal...`}
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+              />
+              <button type="submit" className="fab-submit">Add</button>
+            </form>
+          )}
+          <button
+            className={`fab-button ${isAdding ? 'rotate' : ''}`}
+            onClick={handleFabToggle}
+            type="button"
+            aria-label={isAdding ? "Close" : "Add task"}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+        </div>
+      </>
     </div>
   );
 }

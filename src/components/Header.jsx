@@ -1,7 +1,18 @@
-export default function Header({ totalTokens, streak, isVibrating }) {
+import { useEffect, useState } from 'react';
+
+export default function Header({ userName, streak }) {
+  const [greeting, setGreeting] = useState('Welcome');
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Good morning');
+    else if (hour < 18) setGreeting('Good afternoon');
+    else setGreeting('Good evening');
+  }, []);
+
   return (
     <header className="app-header">
-      <h1 className="app-title">Gamified To-Do</h1>
+      <h1 className="app-title">{greeting}, {userName || 'Friend'}!</h1>
       <div className="header-stats" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
         <div className="streak-counter" title="Current Streak" style={{
           background: 'rgba(255,255,255,0.2)',
@@ -15,10 +26,6 @@ export default function Header({ totalTokens, streak, isVibrating }) {
           border: '1px solid rgba(255,255,255,0.3)'
         }}>
           🔥 {streak} {streak === 1 ? 'Day' : 'Days'}
-        </div>
-        <div id="total-tokens-counter" className={`token-counter ${isVibrating ? 'vibrate-animation' : ''}`}>
-          <span className="token-label">Total Tokens</span>
-          <span className="token-value">{totalTokens}</span>
         </div>
       </div>
     </header>

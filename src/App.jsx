@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Header from './components/Header';
 import TaskBoard from './components/TaskBoard';
 import PomodoroTimer from './components/PomodoroTimer';
+import BottomNav from './components/BottomNav';
 import { playDingSound } from './utils/sound';
 import confetti from 'canvas-confetti';
 import { arrayMove } from '@dnd-kit/sortable';
@@ -13,98 +14,29 @@ const getTodayDateString = () => {
   return d.toISOString().split('T')[0];
 };
 
-const FlyingToken = ({ token, onArrive }) => {
-  const [style, setStyle] = useState({
-    position: 'fixed',
-    left: token.startPos.x,
-    top: token.startPos.y,
-    transform: 'translate(-50%, -50%) scale(1.5)',
-    transition: 'none',
-    zIndex: 9999,
-    opacity: 1,
-    pointerEvents: 'none'
-  });
-
-  useEffect(() => {
-    const targetEl = document.getElementById('total-tokens-counter');
-    if (!targetEl) {
-      onArrive(token.reward, token.id);
-      return;
-    }
-    
-    const targetRect = targetEl.getBoundingClientRect();
-    const targetX = targetRect.left + targetRect.width / 2;
-    const targetY = targetRect.top + targetRect.height / 2;
-
-    const timer1 = setTimeout(() => {
-      setStyle(prev => ({
-        ...prev,
-        transform: 'translate(-50%, -100%) scale(2)',
-        transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-      }));
-    }, 10);
-
-    const timer2 = setTimeout(() => {
-      setStyle(prev => ({
-        ...prev,
-        left: targetX,
-        top: targetY,
-        transform: 'translate(-50%, -50%) scale(0.5)',
-        transition: 'all 0.6s cubic-bezier(0.5, 0, 0.2, 1)',
-        opacity: 0.2
-      }));
-    }, 350);
-
-    const timer3 = setTimeout(() => {
-      onArrive(token.reward, token.id);
-    }, 950);
-
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-    };
-  }, [token, onArrive]);
-
-  return (
-    <div className={`task-reward reward-${token.category}`} style={style}>
-      +{token.reward}
-    </div>
-  );
-};
-
 const INITIAL_TASKS = [
-  { id: '1', title: 'Drink 2L of water', category: 'daily', reward: 10, completed: false, date: getTodayDateString() },
-  { id: '2', title: 'Read 30 pages', category: 'daily', reward: 10, completed: false, date: getTodayDateString() },
-  { id: '3', title: 'Workout 3x this week', category: 'weekly', reward: 50, completed: false, date: getTodayDateString() },
-  { id: '4', title: 'Finish MVP prototype', category: 'monthly', reward: 100, completed: false, date: getTodayDateString() },
+  { id: '1', title: 'Drink 2L of water', category: 'daily', completed: false, date: getTodayDateString() },
+  { id: '2', title: 'Read 30 pages', category: 'daily', completed: false, date: getTodayDateString() },
 ];
-
-const INITIAL_REWARDS = [
-  { id: 'r1', title: 'Watch 1 episode of Netflix', cost: 100 },
-  { id: 'r2', title: 'Buy a coffee', cost: 50 }
-];
-
-const REWARDS_VALS = { daily: 10, weekly: 50, monthly: 100 };
 
 function App() {
+  const [userName, setUserName] = useState(() => localStorage.getItem('gamified-todo-username') || '');
+  const [showNamePrompt, setShowNamePrompt] = useState(!localStorage.getItem('gamified-todo-username'));
+  const [tempName, setTempName] = useState('');
+
+  const [activeTab, setActiveTab] = useState('daily');
+  const [isTimerOpen, setIsTimerOpen] = useState(false);
+
   const [tasks, setTasks] = useState(() => {
     const saved = localStorage.getItem('gamified-todo-tasks');
     if (saved) {
       const parsed = JSON.parse(saved);
-      return parsed.map(t => t.date ? t : { ...t, date: getTodayDateString() });
+      // Filter out removed categories from old data
+      return parsed
+        .filter(t => t.category === 'daily' || t.category === 'calendar' || t.category === undefined)
+        .map(t => t.date ? t : { ...t, date: getTodayDateString() });
     }
     return INITIAL_TASKS;
-  });
-
-  const [rewards, setRewards] = useState(() => {
-    const saved = localStorage.getItem('gamified-todo-rewards');
-    return saved ? JSON.parse(saved) : INITIAL_REWARDS;
-  });
-
-  const [totalTokens, setTotalTokens] = useState(() => {
-    const saved = localStorage.getItem('gamified-todo-tokens');
-    return saved ? parseInt(saved, 10) : 0;
   });
 
   const [streak, setStreak] = useState(() => {
@@ -115,9 +47,6 @@ function App() {
   const [lastActiveDate, setLastActiveDate] = useState(() => {
     return localStorage.getItem('gamified-todo-last-active') || null;
   });
-
-  const [flyingTokens, setFlyingTokens] = useState([]);
-  const [isVibrating, setIsVibrating] = useState(false);
 
   // Pomodoro state
   const [pomodoroHistory, setPomodoroHistory] = useState(() => {
@@ -142,24 +71,24 @@ function App() {
     setUndoTimeLeft(0);
   }, [clearUndoTimers]);
 
-  const handleTokenArrival = (reward, tokenId) => {
-    setTotalTokens(prev => prev + reward);
-    setFlyingTokens(prev => prev.filter(t => t.id !== tokenId));
-    setIsVibrating(true);
-    setTimeout(() => setIsVibrating(false), 400);
-  };
-
   // Persist state
   useEffect(() => {
     localStorage.setItem('gamified-todo-tasks', JSON.stringify(tasks));
-    localStorage.setItem('gamified-todo-rewards', JSON.stringify(rewards));
-    localStorage.setItem('gamified-todo-tokens', totalTokens.toString());
     localStorage.setItem('gamified-todo-streak', streak.toString());
     if (lastActiveDate) {
       localStorage.setItem('gamified-todo-last-active', lastActiveDate);
     }
     localStorage.setItem('gamified-todo-pomodoro', JSON.stringify(pomodoroHistory));
-  }, [tasks, rewards, totalTokens, streak, lastActiveDate, pomodoroHistory]);
+  }, [tasks, streak, lastActiveDate, pomodoroHistory]);
+
+  const handleSaveName = (e) => {
+    e.preventDefault();
+    if (tempName.trim()) {
+      setUserName(tempName.trim());
+      localStorage.setItem('gamified-todo-username', tempName.trim());
+      setShowNamePrompt(false);
+    }
+  };
 
   const handleCompleteTask = (taskId, startPos) => {
     setTasks(prevTasks => prevTasks.map(task => {
@@ -167,19 +96,6 @@ function App() {
         const isCompleting = !task.completed;
         
         if (isCompleting) {
-          if (startPos) {
-            const newFlyingToken = {
-              id: Date.now().toString() + Math.random(),
-              reward: task.reward,
-              category: task.category,
-              startPos
-            };
-            setFlyingTokens(prev => [...prev, newFlyingToken]);
-          } else {
-            setTotalTokens(prev => prev + task.reward);
-          }
-          
-          
           playDingSound();
 
           if (task.category === 'daily') {
@@ -194,16 +110,7 @@ function App() {
               }
               setLastActiveDate(today);
             }
-          } else if (task.category === 'monthly') {
-            confetti({
-              particleCount: 150,
-              spread: 70,
-              origin: { y: 0.6 },
-              colors: ['#6366f1', '#a855f7', '#ec4899', '#f97316', '#3b82f6']
-            });
           }
-        } else {
-          setTotalTokens(prev => Math.max(0, prev - task.reward));
         }
 
         return { ...task, completed: isCompleting };
@@ -213,9 +120,7 @@ function App() {
   };
 
   const handleDeleteTask = (taskId) => {
-    // If there's a pending undo from a previous delete, discard it
     clearUndoTimers();
-
     setTasks(prevTasks => {
       const index = prevTasks.findIndex(task => task.id === taskId);
       if (index === -1) return prevTasks;
@@ -223,7 +128,6 @@ function App() {
       setDeletedTaskInfo({ task: deletedTask, index });
       setUndoTimeLeft(5);
 
-      // Start countdown display
       undoCountdownRef.current = setInterval(() => {
         setUndoTimeLeft(prev => {
           if (prev <= 1) {
@@ -234,7 +138,6 @@ function App() {
         });
       }, 1000);
 
-      // Auto-dismiss after 5 seconds
       undoTimerRef.current = setTimeout(() => {
         setDeletedTaskInfo(null);
         setUndoTimeLeft(0);
@@ -250,7 +153,6 @@ function App() {
     clearUndoTimers();
     setTasks(prevTasks => {
       const newTasks = [...prevTasks];
-      // Insert back at original position, or at the end if the list is shorter now
       const insertAt = Math.min(deletedTaskInfo.index, newTasks.length);
       newTasks.splice(insertAt, 0, deletedTaskInfo.task);
       return newTasks;
@@ -264,28 +166,10 @@ function App() {
       id: Date.now().toString(),
       title,
       category,
-      reward: REWARDS_VALS[category],
       completed: false,
       date
     };
     setTasks(prev => [...prev, newTask]);
-  };
-
-  const handleAddReward = (title, cost) => {
-    const newReward = {
-      id: Date.now().toString(),
-      title,
-      cost: parseInt(cost, 10)
-    };
-    setRewards(prev => [...prev, newReward]);
-  };
-
-  const handleRedeemReward = (cost) => {
-    if (totalTokens >= cost) {
-      setTotalTokens(prev => prev - cost);
-      return true;
-    }
-    return false;
   };
 
   const handleDragEnd = (event) => {
@@ -297,7 +181,6 @@ function App() {
         
         const category = activeTask.category;
         
-        // Isolate sorting to the specific category
         const categoryTasks = prevTasks.filter(t => t.category === category);
         const otherTasks = prevTasks.filter(t => t.category !== category);
 
@@ -313,23 +196,45 @@ function App() {
 
   return (
     <>
-      <Header totalTokens={totalTokens} streak={streak} isVibrating={isVibrating} />
+      {showNamePrompt && (
+        <div className="name-modal-overlay">
+          <div className="name-modal-content">
+            <h2>Welcome! 👋</h2>
+            <p>What should we call you?</p>
+            <form onSubmit={handleSaveName}>
+              <input 
+                type="text" 
+                value={tempName} 
+                onChange={(e) => setTempName(e.target.value)} 
+                placeholder="Enter your name"
+                autoFocus
+              />
+              <button type="submit" disabled={!tempName.trim()}>Let's Go</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <Header userName={userName} streak={streak} />
       <main>
-        {flyingTokens.map(ft => (
-          <FlyingToken key={ft.id} token={ft} onArrive={handleTokenArrival} />
-        ))}
         <TaskBoard 
           tasks={tasks} 
-          rewards={rewards}
-          totalTokens={totalTokens}
+          activeTab={activeTab}
           onCompleteTask={handleCompleteTask} 
           onAddTask={handleAddTask}
           onDeleteTask={handleDeleteTask}
-          onAddReward={handleAddReward}
-          onRedeemReward={handleRedeemReward}
           onDragEnd={handleDragEnd}
         />
       </main>
+
+      <BottomNav 
+        activeTab={activeTab} 
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          Haptics.impact({ style: ImpactStyle.Light }).catch(() => { });
+        }}
+        onTimerClick={() => setIsTimerOpen(true)}
+      />
 
       {/* Undo Delete Toast */}
       {deletedTaskInfo && (
@@ -354,8 +259,10 @@ function App() {
           </div>
         </div>
       )}
-      {/* Pomodoro Timer Feature */}
+
       <PomodoroTimer 
+        isOpen={isTimerOpen}
+        onClose={() => setIsTimerOpen(false)}
         history={pomodoroHistory}
         onSaveSession={(session) => {
           setPomodoroHistory(prev => [session, ...prev]);

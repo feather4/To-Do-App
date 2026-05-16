@@ -35,18 +35,7 @@ export default function TaskItem({ task, onComplete, onDelete, animDelay = 0 }) 
 
     if (!task.completed) {
       await Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
-      // Get the reward badge position for the flying token animation
-      const rewardEl = document.querySelector(`[data-task-reward="${task.id}"]`);
-      if (rewardEl) {
-        const rect = rewardEl.getBoundingClientRect();
-        const startPos = {
-          x: rect.left + rect.width / 2,
-          y: rect.top + rect.height / 2
-        };
-        onComplete(task.id, startPos);
-      } else {
-        onComplete(task.id);
-      }
+      onComplete(task.id);
     } else {
       await Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
       onComplete(task.id);
@@ -95,14 +84,7 @@ export default function TaskItem({ task, onComplete, onDelete, animDelay = 0 }) 
         <span className="task-title">{task.title}</span>
       </div>
       
-      {!task.completed && (
-        <span 
-          data-task-reward={task.id}
-          className={`task-reward reward-${task.category}`}
-        >
-          +{task.reward}
-        </span>
-      )}
+
 
       {/* Delete Button - independent of drag */}
       <button 
