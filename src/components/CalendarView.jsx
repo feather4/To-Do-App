@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from 'react';
 
 const CalendarView = ({ tasks, selectedDate, onSelectDate }) => {
-  const [currentDate, setCurrentDate] = useState(new Date(selectedDate || Date.now()));
+  // Parse a local YYYY-MM-DD string safely (no UTC shift)
+  const parseLocalDate = (dateStr) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  };
+
+  const [currentDate, setCurrentDate] = useState(() =>
+    selectedDate ? parseLocalDate(selectedDate) : new Date()
+  );
 
   // Keep calendar view in sync with selected date if it changes externally
   useEffect(() => {
     if (selectedDate) {
-      setCurrentDate(new Date(selectedDate));
+      setCurrentDate(parseLocalDate(selectedDate));
     }
   }, [selectedDate]);
 
@@ -35,8 +43,10 @@ const CalendarView = ({ tasks, selectedDate, onSelectDate }) => {
 
   const todayStr = (() => {
     const d = new Date();
-    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-    return d.toISOString().split('T')[0];
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
   })();
 
   return (
@@ -53,9 +63,10 @@ const CalendarView = ({ tasks, selectedDate, onSelectDate }) => {
         {days.map((day, index) => {
           if (!day) return <div key={`empty-${index}`} className="calendar-day empty"></div>;
           
-          const d = new Date(year, month, day);
-          d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-          const dateStr = d.toISOString().split('T')[0];
+          const y = year;
+          const m = String(month + 1).padStart(2, '0');
+          const dayStr = String(day).padStart(2, '0');
+          const dateStr = `${y}-${m}-${dayStr}`;
           
           const isSelected = dateStr === selectedDate;
           const isToday = dateStr === todayStr;
