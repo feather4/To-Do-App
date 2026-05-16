@@ -7,6 +7,12 @@ import confetti from 'canvas-confetti';
 import { arrayMove } from '@dnd-kit/sortable';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
+const getTodayDateString = () => {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().split('T')[0];
+};
+
 const FlyingToken = ({ token, onArrive }) => {
   const [style, setStyle] = useState({
     position: 'fixed',
@@ -68,10 +74,10 @@ const FlyingToken = ({ token, onArrive }) => {
 };
 
 const INITIAL_TASKS = [
-  { id: '1', title: 'Drink 2L of water', category: 'daily', reward: 10, completed: false },
-  { id: '2', title: 'Read 30 pages', category: 'daily', reward: 10, completed: false },
-  { id: '3', title: 'Workout 3x this week', category: 'weekly', reward: 50, completed: false },
-  { id: '4', title: 'Finish MVP prototype', category: 'monthly', reward: 100, completed: false },
+  { id: '1', title: 'Drink 2L of water', category: 'daily', reward: 10, completed: false, date: getTodayDateString() },
+  { id: '2', title: 'Read 30 pages', category: 'daily', reward: 10, completed: false, date: getTodayDateString() },
+  { id: '3', title: 'Workout 3x this week', category: 'weekly', reward: 50, completed: false, date: getTodayDateString() },
+  { id: '4', title: 'Finish MVP prototype', category: 'monthly', reward: 100, completed: false, date: getTodayDateString() },
 ];
 
 const INITIAL_REWARDS = [
@@ -84,7 +90,11 @@ const REWARDS_VALS = { daily: 10, weekly: 50, monthly: 100 };
 function App() {
   const [tasks, setTasks] = useState(() => {
     const saved = localStorage.getItem('gamified-todo-tasks');
-    return saved ? JSON.parse(saved) : INITIAL_TASKS;
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return parsed.map(t => t.date ? t : { ...t, date: getTodayDateString() });
+    }
+    return INITIAL_TASKS;
   });
 
   const [rewards, setRewards] = useState(() => {
@@ -249,13 +259,14 @@ function App() {
     setUndoTimeLeft(0);
   };
 
-  const handleAddTask = (title, category) => {
+  const handleAddTask = (title, category, date = getTodayDateString()) => {
     const newTask = {
       id: Date.now().toString(),
       title,
       category,
       reward: REWARDS_VALS[category],
-      completed: false
+      completed: false,
+      date
     };
     setTasks(prev => [...prev, newTask]);
   };

@@ -799,6 +799,127 @@ body {
   color: rgba(255, 255, 255, 0.95);
 }
 
+/* ============================
+   CALENDAR VIEW
+   ============================ */
+
+.calendar-container {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  border: 1px solid var(--card-border);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.calendar-nav-btn {
+  background: white;
+  border: 1px solid var(--card-border);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-main);
+  transition: all 0.2s ease;
+  font-weight: bold;
+}
+
+.calendar-nav-btn:hover {
+  background: var(--text-main);
+  color: white;
+}
+
+.calendar-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+}
+
+.calendar-day-name {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding: 0.5rem 0;
+  text-transform: uppercase;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.calendar-day:not(.empty):hover {
+  background: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.calendar-day.empty {
+  cursor: default;
+  background: transparent;
+}
+
+.calendar-day.today {
+  border: 2px solid #3b82f6;
+  font-weight: 700;
+}
+
+.calendar-day.selected {
+  background: var(--primary-gradient);
+  color: white;
+  box-shadow: var(--primary-shadow);
+  border-color: transparent;
+}
+
+.day-number {
+  font-size: 0.875rem;
+}
+
+.task-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 4px;
+}
+
+.indicator-uncompleted {
+  background-color: #ef4444; /* red for pending tasks */
+}
+
+.indicator-completed {
+  background-color: #10b981; /* green for all completed */
+}
+
+.calendar-day.selected .indicator-uncompleted,
+.calendar-day.selected .indicator-completed {
+  background-color: white; /* Make dots white when selected */
+}
+
+
 .undo-toast-title {
   font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.55);
@@ -1327,4 +1448,33 @@ body {
   .pomodoro-toggle-btn {
     bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
   }
+
+  .calendar-container {
+    padding: 0.75rem;
+    border-radius: 1rem;
+  }
+
+  .calendar-title {
+    font-size: 1rem;
+  }
+
+  .calendar-nav-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .calendar-day-name {
+    font-size: 0.65rem;
+  }
+
+  .day-number {
+    font-size: 0.75rem;
+  }
+
+  .task-indicator {
+    width: 4px;
+    height: 4px;
+    bottom: 3px;
+  }
 }
+

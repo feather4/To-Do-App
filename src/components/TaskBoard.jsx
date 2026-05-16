@@ -12,18 +12,28 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import TaskItem from './TaskItem';
 import RewardShop from './RewardShop';
+import CalendarView from './CalendarView';
 import { playAddSound } from '../utils/sound';
+
+const getTodayDateString = () => {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().split('T')[0];
+};
 
 export default function TaskBoard({
   tasks, rewards, totalTokens, onCompleteTask, onAddTask, onDeleteTask, onAddReward, onRedeemReward, onDragEnd
 }) {
   const [activeTab, setActiveTab] = useState('daily');
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(getTodayDateString());
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [tabKey, setTabKey] = useState(0); // forces re-render for stagger
   const inputRef = useRef(null);
 
-  const filteredTasks = tasks.filter(t => t.category === activeTab);
+  const filteredTasks = activeTab === 'calendar' 
+    ? tasks.filter(t => t.date === selectedCalendarDate)
+    : tasks.filter(t => t.category === activeTab);
 
   // Progress Bar calculation for daily tasks
   const dailyTasks = tasks.filter(t => t.category === 'daily');
@@ -95,7 +105,9 @@ export default function TaskBoard({
     if (newTaskTitle.trim()) {
       await Haptics.notification({ type: NotificationType.Success }).catch(() => { });
       playAddSound();
-      onAddTask(newTaskTitle, activeTab);
+      const category = activeTab === 'calendar' ? 'daily' : activeTab;
+      const date = activeTab === 'calendar' ? selectedCalendarDate : getTodayDateString();
+      onAddTask(newTaskTitle, category, date);
       setNewTaskTitle('');
       setIsAdding(false);
     }
@@ -108,6 +120,7 @@ export default function TaskBoard({
       if (activeTab === 'daily') return { emoji: '🎉', text: "All done for today! Time to relax." };
       if (activeTab === 'weekly') return { emoji: '🌟', text: "Incredible! You crushed your weekly goals." };
       if (activeTab === 'monthly') return { emoji: '🏆', text: "Legendary! Monthly goals destroyed." };
+      if (activeTab === 'calendar') return { emoji: '🎉', text: "All done for this date!" };
     }
     return null;
   };
@@ -120,6 +133,7 @@ export default function TaskBoard({
         <button className={`tab-button ${activeTab === 'daily' ? 'active' : ''}`} onClick={() => handleTabSwitch('daily')}>Daily Goals</button>
         <button className={`tab-button ${activeTab === 'weekly' ? 'active' : ''}`} onClick={() => handleTabSwitch('weekly')}>Weekly Goals</button>
         <button className={`tab-button ${activeTab === 'monthly' ? 'active' : ''}`} onClick={() => handleTabSwitch('monthly')}>Monthly Goals</button>
+        <button className={`tab-button ${activeTab === 'calendar' ? 'active' : ''}`} onClick={() => handleTabSwitch('calendar')}>Calendar 📅</button>
         <button className={`tab-button ${activeTab === 'rewards' ? 'active' : ''}`} onClick={() => handleTabSwitch('rewards')}>Rewards 🎁</button>
       </div>
 
@@ -144,9 +158,17 @@ export default function TaskBoard({
         />
       ) : (
         <>
-          <div className="board-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          {activeTab === 'calendar' && (
+            <CalendarView 
+              tasks={tasks}
+              selectedDate={selectedCalendarDate}
+              onSelectDate={setSelectedCalendarDate}
+            />
+          )}
+
+          <div className="board-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', marginTop: activeTab === 'calendar' ? '2rem' : '0' }}>
             <h3 style={{ fontSize: '1.25rem', color: 'var(--text-main)', fontWeight: '700' }}>
-              {activeTab === 'daily' ? "Today's Focus" : activeTab === 'weekly' ? "This Week" : "This Month"}
+              {activeTab === 'daily' ? "Today's Focus" : activeTab === 'weekly' ? "This Week" : activeTab === 'monthly' ? "This Month" : `Tasks for ${selectedCalendarDate}`}
             </h3>
           </div>
 
