@@ -3,13 +3,16 @@ import Header from './components/Header';
 import TaskBoard from './components/TaskBoard';
 import PomodoroTimer from './components/PomodoroTimer';
 import BottomNav from './components/BottomNav';
+import AnalyticsDashboard from './components/AnalyticsDashboard';
+import SettingsModal from './components/SettingsModal';
 import { playDingSound } from './utils/sound';
 import confetti from 'canvas-confetti';
 import { arrayMove } from '@dnd-kit/sortable';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
-const getTodayDateString = () => {
+const getTodayDateString = (dayStartHour = 0) => {
   const d = new Date();
+  d.setHours(d.getHours() - dayStartHour);
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
@@ -26,8 +29,12 @@ function App() {
   const [showNamePrompt, setShowNamePrompt] = useState(!localStorage.getItem('gamified-todo-username'));
   const [tempName, setTempName] = useState('');
 
+  const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem('gamified-todo-theme') || 'default');
+  const [dayStartHour, setDayStartHour] = useState(() => parseInt(localStorage.getItem('gamified-todo-daystart') || '0', 10));
+
   const [activeTab, setActiveTab] = useState('daily');
   const [isTimerOpen, setIsTimerOpen] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
 
   const [tasks, setTasks] = useState(() => {
     const saved = localStorage.getItem('gamified-todo-tasks');
@@ -36,7 +43,7 @@ function App() {
       // Filter out removed categories from old data
       return parsed
         .filter(t => t.category === 'daily' || t.category === 'calendar' || t.category === undefined)
-        .map(t => t.date ? t : { ...t, date: getTodayDateString() });
+        .map(t => t.date ? t : { ...t, date: getTodayDateString(0) });
     }
     return INITIAL_TASKS;
   });
@@ -49,6 +56,36 @@ function App() {
   const [lastActiveDate, setLastActiveDate] = useState(() => {
     return localStorage.getItem('gamified-todo-last-active') || null;
   });
+
+  // Rollover logic
+  const [showRolloverPrompt, setShowRolloverPrompt] = useState(false);
+  const [tasksToRollover, setTasksToRollover] = useState([]);
+
+  useEffect(() => {
+    const logicalToday = getTodayDateString(dayStartHour);
+    if (lastActiveDate && logicalToday > lastActiveDate) {
+      const pastUncompleted = tasks.filter(t => t.category === 'daily' && !t.completed && t.date <= lastActiveDate);
+      if (pastUncompleted.length > 0) {
+        setTasksToRollover(pastUncompleted);
+        setShowRolloverPrompt(true);
+      } else {
+        setLastActiveDate(logicalToday);
+      }
+    } else if (!lastActiveDate) {
+      setLastActiveDate(logicalToday);
+    }
+  }, [dayStartHour, lastActiveDate, tasks]);
+
+  const handleRolloverChoice = (carryForward) => {
+    const logicalToday = getTodayDateString(dayStartHour);
+    if (carryForward) {
+      const taskIds = tasksToRollover.map(t => t.id);
+      setTasks(prev => prev.map(t => taskIds.includes(t.id) ? { ...t, date: logicalToday } : t));
+    }
+    setLastActiveDate(logicalToday);
+    setShowRolloverPrompt(false);
+    setTasksToRollover([]);
+  };
 
   // Pomodoro state
   const [pomodoroHistory, setPomodoroHistory] = useState(() => {
@@ -81,7 +118,14 @@ function App() {
       localStorage.setItem('gamified-todo-last-active', lastActiveDate);
     }
     localStorage.setItem('gamified-todo-pomodoro', JSON.stringify(pomodoroHistory));
-  }, [tasks, streak, lastActiveDate, pomodoroHistory]);
+    localStorage.setItem('gamified-todo-theme', currentTheme);
+    localStorage.setItem('gamified-todo-daystart', dayStartHour.toString());
+  }, [tasks, streak, lastActiveDate, pomodoroHistory, currentTheme, dayStartHour]);
+
+  // Apply theme to body
+  useEffect(() => {
+    document.body.className = currentTheme === 'default' ? '' : currentTheme;
+  }, [currentTheme]);
 
   const handleSaveName = (e) => {
     e.preventDefault();
@@ -101,16 +145,22 @@ function App() {
           playDingSound();
 
           if (task.category === 'daily') {
-            const today = new Date().toDateString();
-            if (lastActiveDate !== today) {
-              const yesterday = new Date();
-              yesterday.setDate(yesterday.getDate() - 1);
-              if (lastActiveDate === yesterday.toDateString()) {
+            const logicalToday = getTodayDateString(dayStartHour);
+            if (lastActiveDate !== logicalToday) {
+              const d = new Date();
+              d.setHours(d.getHours() - dayStartHour);
+              d.setDate(d.getDate() - 1);
+              const y = d.getFullYear();
+              const m = String(d.getMonth() + 1).padStart(2, '0');
+              const day = String(d.getDate()).padStart(2, '0');
+              const yesterdayStr = `${y}-${m}-${day}`;
+
+              if (lastActiveDate === yesterdayStr) {
                 setStreak(prev => prev + 1);
               } else {
                 setStreak(1);
               }
-              setLastActiveDate(today);
+              setLastActiveDate(logicalToday);
             }
           }
         }
@@ -163,7 +213,8 @@ function App() {
     setUndoTimeLeft(0);
   };
 
-  const handleAddTask = (title, category, date = getTodayDateString()) => {
+  const handleAddTask = (title, category, date) => {
+    if (!date) date = getTodayDateString(dayStartHour);
     const newTask = {
       id: Date.now().toString(),
       title,
@@ -198,6 +249,13 @@ function App() {
 
   return (
     <>
+      <SettingsModal 
+        currentTheme={currentTheme} 
+        onThemeChange={setCurrentTheme} 
+        dayStartHour={dayStartHour}
+        onDayStartChange={setDayStartHour}
+      />
+
       {showNamePrompt && (
         <div className="name-modal-overlay">
           <div className="name-modal-content">
@@ -217,20 +275,74 @@ function App() {
         </div>
       )}
 
-      <Header userName={userName} streak={streak} />
+      {showRolloverPrompt && (
+        <div className="name-modal-overlay" style={{ zIndex: 2000 }}>
+          <div className="name-modal-content" style={{ textAlign: 'center' }}>
+            <h2 style={{ marginBottom: '1rem' }}>A New Day! 🌅</h2>
+            <p style={{ marginBottom: '1.5rem', lineHeight: '1.5' }}>
+              You have {tasksToRollover.length} uncompleted task(s) from yesterday. 
+              <br/>Would you like to carry them forward to today?
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <button 
+                onClick={() => handleRolloverChoice(false)}
+                style={{ 
+                  background: 'rgba(0,0,0,0.1)', color: 'var(--text-main)', 
+                  padding: '0.75rem 1.5rem', borderRadius: '999px', border: 'none', 
+                  fontWeight: '700', cursor: 'pointer' 
+                }}
+              >
+                No, leave them
+              </button>
+              <button 
+                onClick={() => handleRolloverChoice(true)}
+                style={{ 
+                  background: 'var(--primary-gradient)', color: 'white', 
+                  padding: '0.75rem 1.5rem', borderRadius: '999px', border: 'none', 
+                  fontWeight: '700', cursor: 'pointer', boxShadow: 'var(--primary-shadow)' 
+                }}
+              >
+                Yes, carry forward
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Header 
+        userName={userName} 
+        streak={streak} 
+        displayDate={(() => {
+          const d = new Date();
+          d.setHours(d.getHours() - dayStartHour);
+          return `${d.getDate()} ${d.toLocaleDateString('en-US', { weekday: 'short' })}`;
+        })()}
+      />
       <main>
-        <TaskBoard 
-          tasks={tasks} 
-          activeTab={activeTab}
-          onCompleteTask={handleCompleteTask} 
-          onAddTask={handleAddTask}
-          onDeleteTask={handleDeleteTask}
-          onDragEnd={handleDragEnd}
-        />
+        {activeTab === 'analytics' ? (
+          <AnalyticsDashboard tasks={tasks} pomodoroHistory={pomodoroHistory} />
+        ) : (
+          <TaskBoard 
+            tasks={tasks} 
+            activeTab={activeTab}
+            onCompleteTask={handleCompleteTask} 
+            onAddTask={handleAddTask}
+            onDeleteTask={handleDeleteTask}
+            onDragEnd={handleDragEnd}
+            currentDateString={getTodayDateString(dayStartHour)}
+            isAdding={isAdding}
+            setIsAdding={setIsAdding}
+          />
+        )}
       </main>
 
       <BottomNav 
         activeTab={activeTab} 
+        isAdding={isAdding}
+        onAddClick={() => {
+          setIsAdding(!isAdding);
+          Haptics.impact({ style: ImpactStyle.Light }).catch(() => { });
+        }}
         onTabChange={(tab) => {
           setActiveTab(tab);
           Haptics.impact({ style: ImpactStyle.Light }).catch(() => { });

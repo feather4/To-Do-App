@@ -5,7 +5,9 @@ import {
   MouseSensor,
   TouchSensor,
   useSensor,
-  useSensors
+  useSensors,
+  DragOverlay,
+  defaultDropAnimationSideEffects
 } from '@dnd-kit/core';
 import { restrictToVerticalAxis, restrictToParentElement } from '@dnd-kit/modifiers';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -14,20 +16,12 @@ import TaskItem from './TaskItem';
 import CalendarView from './CalendarView';
 import { playAddSound } from '../utils/sound';
 
-const getTodayDateString = () => {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-};
-
 export default function TaskBoard({
-  tasks, activeTab, onCompleteTask, onAddTask, onDeleteTask, onDragEnd
+  tasks, activeTab, onCompleteTask, onAddTask, onDeleteTask, onDragEnd, currentDateString, isAdding, setIsAdding
 }) {
-  const [selectedCalendarDate, setSelectedCalendarDate] = useState(getTodayDateString());
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(currentDateString);
   const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [isAdding, setIsAdding] = useState(false);
+  const [activeId, setActiveId] = useState(null);
   const [tabKey, setTabKey] = useState(0); // forces re-render for stagger
   const inputRef = useRef(null);
 
@@ -66,7 +60,7 @@ export default function TaskBoard({
   }, [isAdding]);
 
   const handleDragStart = async (event) => {
-    // Vibrate when lifting the task
+    setActiveId(event.active.id);
     lastOverId.current = event.active.id;
     await Haptics.impact({ style: ImpactStyle.Light }).catch(() => { });
   };
@@ -81,6 +75,7 @@ export default function TaskBoard({
   };
 
   const handleDragEndInternal = async (event) => {
+    setActiveId(null);
     lastOverId.current = null;
     onDragEnd(event);
     await Haptics.impact({ style: ImpactStyle.Medium }).catch(() => { });
@@ -98,7 +93,7 @@ export default function TaskBoard({
       await Haptics.notification({ type: NotificationType.Success }).catch(() => { });
       playAddSound();
       const category = activeTab === 'calendar' ? 'daily' : activeTab;
-      const date = activeTab === 'calendar' ? selectedCalendarDate : getTodayDateString();
+      const date = activeTab === 'calendar' ? selectedCalendarDate : currentDateString;
       onAddTask(newTaskTitle, category, date);
       setNewTaskTitle('');
       setIsAdding(false);
@@ -173,6 +168,19 @@ export default function TaskBoard({
                   />
                 ))}
               </SortableContext>
+              
+              <DragOverlay dropAnimation={{
+                sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } }),
+              }}>
+                {activeId ? (
+                  <TaskItem
+                    task={filteredTasks.find(t => t.id === activeId) || { id: activeId, title: 'Dragging...', completed: false }}
+                    onComplete={() => {}}
+                    onDelete={() => {}}
+                    isOverlay={true}
+                  />
+                ) : null}
+              </DragOverlay>
             </DndContext>
           </div>
 
@@ -195,17 +203,6 @@ export default function TaskBoard({
               <button type="submit" className="fab-submit">Add</button>
             </form>
           )}
-          <button
-            className={`fab-button ${isAdding ? 'rotate' : ''}`}
-            onClick={handleFabToggle}
-            type="button"
-            aria-label={isAdding ? "Close" : "Add task"}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-          </button>
         </div>
       </>
     </div>

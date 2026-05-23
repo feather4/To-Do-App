@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('./themes.css');
 
 :root {
   --bg-gradient: linear-gradient(135deg, #f0f4ff 0%, #fdf4ff 50%, #fff1f2 100%);
@@ -9,7 +10,7 @@
   --text-muted: #64748b;
   --text-disabled: #94a3b8;
   
-  --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+  --primary-gradient: linear-gradient(135deg, var(--accent-main) 0%, var(--accent-hover) 50%, #ec4899 100%);
   --primary-shadow: 0 10px 25px -5px rgba(168, 85, 247, 0.4);
 
   --daily-gradient: linear-gradient(135deg, #10b981, #3b82f6);
@@ -161,6 +162,7 @@ body {
   box-shadow: var(--shadow-glass);
   padding: 2rem;
   min-height: 450px;
+  margin-bottom: 90px;
 }
 
 /* Task Item */
@@ -176,7 +178,7 @@ body {
   position: relative;
   box-shadow: 0 2px 12px rgba(99, 102, 241, 0.07), 0 1px 3px rgba(0,0,0,0.04);
   /* Left accent bar */
-  border-left: 4px solid #6366f1;
+  border-left: 4px solid var(--accent-main);
 }
 
 .task-item:active {
@@ -260,7 +262,7 @@ body {
 
 @media (hover: hover) {
   .task-item:hover .checkbox-container {
-    border-color: #a855f7;
+    border-color: var(--accent-hover);
   }
 }
 
@@ -406,15 +408,16 @@ body {
 .floating-reward.reward-weekly { color: #d946ef; }
 .floating-reward.reward-monthly { color: #f97316; }
 
-/* FAB Add Task */
+/* FAB Add Task Form Container */
 .fab-container {
   position: fixed;
-  bottom: 2rem;
-  right: 2rem;
+  bottom: 7rem;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 1000;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  justify-content: center;
 }
 
 .fab-form {
@@ -716,10 +719,7 @@ body {
     grid-template-columns: 1fr;
   }
   .fab-container {
-    bottom: 1.5rem;
-    right: 1.5rem;
-    flex-direction: column-reverse;
-    align-items: flex-end;
+    bottom: 6rem;
   }
   .fab-form {
     animation: slideUpBottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -875,8 +875,8 @@ body {
   background: rgba(255, 255, 255, 0.3);
 }
 
-.calendar-day:not(.empty):hover {
-  background: white;
+.calendar-day:not(.empty):not(.selected):hover {
+  background: rgba(255, 255, 255, 0.5);
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
@@ -890,7 +890,8 @@ body {
   font-weight: 700;
 }
 
-.calendar-day.selected {
+.calendar-day.selected,
+.calendar-day.selected:hover {
   background: var(--primary-gradient);
   color: white;
   box-shadow: var(--primary-shadow);
@@ -914,7 +915,7 @@ body {
 }
 
 .indicator-completed {
-  background-color: #10b981; /* green for all completed */
+  background-color: var(--accent-secondary); /* green for all completed */
 }
 
 .calendar-day.selected .indicator-uncompleted,
@@ -1361,8 +1362,8 @@ body {
   stroke-dasharray: 283; /* 2 * pi * 45 */
   transition: stroke-dashoffset 1s linear;
 }
-.pomo-ring-fill.work { stroke: #6366f1; }
-.pomo-ring-fill.break { stroke: #10b981; }
+.pomo-ring-fill.work { stroke: var(--accent-main); }
+.pomo-ring-fill.break { stroke: var(--accent-secondary); }
 
 .pomo-time-display {
   position: absolute;
@@ -1529,7 +1530,7 @@ body {
 }
 
 .nav-item.active {
-  color: #6366f1;
+  color: var(--accent-main);
 }
 
 .nav-item.active svg {
@@ -1610,7 +1611,7 @@ body {
 }
 
 .name-modal-content input:focus {
-  border-color: #6366f1;
+  border-color: var(--accent-main);
   box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
 }
 

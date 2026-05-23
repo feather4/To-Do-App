@@ -23,6 +23,13 @@ const icons = {
       <line x1="3" y1="10" x2="21" y2="10"></line>
     </svg>
   ),
+  analytics: (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10"></line>
+      <line x1="12" y1="20" x2="12" y2="4"></line>
+      <line x1="6" y1="20" x2="6" y2="14"></line>
+    </svg>
+  ),
   timer: (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="13" r="8"></circle>
@@ -30,10 +37,16 @@ const icons = {
       <path d="M5 3L2 6"></path>
       <path d="M19 3l3 3"></path>
     </svg>
+  ),
+  add: (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
   )
 };
 
-export default function BottomNav({ activeTab, onTabChange, onTimerClick }) {
+export default function BottomNav({ activeTab, onTabChange, onTimerClick, onAddClick, isAdding }) {
   return (
     <nav className="bottom-nav">
       <div className="bottom-nav-container">
@@ -51,6 +64,35 @@ export default function BottomNav({ activeTab, onTabChange, onTimerClick }) {
           title="Calendar"
         >
           {icons.calendar}
+        </button>
+
+        <button 
+          className={`nav-item add-btn ${isAdding ? 'rotate' : ''}`} 
+          onClick={onAddClick}
+          title="Add Task"
+          style={{
+            background: 'var(--primary-gradient)',
+            color: 'white',
+            borderRadius: '50%',
+            width: '48px',
+            height: '48px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transform: 'translateY(-20px)',
+            boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+            border: '4px solid var(--bg-main, #ffffff)' // Adjust border to match background if possible
+          }}
+        >
+          {icons.add}
+        </button>
+
+        <button 
+          className={`nav-item ${activeTab === 'analytics' ? 'active' : ''}`} 
+          onClick={() => onTabChange('analytics')}
+          title="Analytics"
+        >
+          {icons.analytics}
         </button>
         <div className="nav-divider" />
         <button 

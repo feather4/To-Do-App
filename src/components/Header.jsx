@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-export default function Header({ userName, streak }) {
+export default function Header({ userName, streak, displayDate }) {
   const [greeting, setGreeting] = useState('Welcome');
 
   useEffect(() => {
@@ -11,7 +11,7 @@ export default function Header({ userName, streak }) {
   }, []);
 
   return (
-    <header className="app-header">
+    <header className="app-header" style={{ paddingRight: '60px' }}>
       <h1 className="app-title">{greeting}, {userName || 'Friend'}!</h1>
       <div className="header-stats" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
         <div className="streak-counter" title="Current Streak" style={{
@@ -26,6 +26,19 @@ export default function Header({ userName, streak }) {
           border: '1px solid rgba(255,255,255,0.3)'
         }}>
           🔥 {streak} {streak === 1 ? 'Day' : 'Days'}
+        </div>
+        <div className="date-display" title="Today's Date" style={{
+          background: 'rgba(255,255,255,0.2)',
+          padding: '0.75rem 1rem',
+          borderRadius: '999px',
+          fontWeight: '700',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.3)'
+        }}>
+          {displayDate}
         </div>
       </div>
     </header>

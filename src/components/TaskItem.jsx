@@ -4,7 +4,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { playDeleteSound } from '../utils/sound';
 
-export default function TaskItem({ task, onComplete, onDelete, animDelay = 0 }) {
+export default function TaskItem({ task, onComplete, onDelete, animDelay = 0, isOverlay = false }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [rippleActive, setRippleActive] = useState(false);
   const itemRef = useRef(null);
@@ -22,10 +22,12 @@ export default function TaskItem({ task, onComplete, onDelete, animDelay = 0 }) 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.6 : 1,
-    zIndex: isDragging ? 10 : 1,
+    opacity: isDragging ? 0.3 : 1,
+    zIndex: isOverlay ? 999 : isDragging ? 10 : 1,
     position: 'relative',
     animationDelay: `${animDelay * 60}ms`,
+    boxShadow: isOverlay ? '0 12px 24px rgba(0,0,0,0.2)' : undefined,
+    cursor: isOverlay ? 'grabbing' : 'default',
   };
 
   const handleComplete = async () => {
