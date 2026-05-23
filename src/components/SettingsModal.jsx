@@ -23,8 +23,9 @@ export default function SettingsModal({ currentTheme, onThemeChange, dayStartHou
   };
 
   const handleDayStartChange = async (e) => {
+    const newValue = Number(e.target.value);
     await Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
-    onDayStartChange(Number(e.target.value));
+    onDayStartChange(newValue);
   };
 
   return (
