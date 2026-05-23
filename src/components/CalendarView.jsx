@@ -47,11 +47,11 @@ const CalendarView = ({ tasks, selectedDate, onSelectDate }) => {
     if (diff > 50) {
       setSlideDirection('slide-left');
       nextMonth();
-      setTimeout(() => setSlideDirection(''), 300);
+      setTimeout(() => setSlideDirection(''), 500);
     } else if (diff < -50) {
       setSlideDirection('slide-right');
       prevMonth();
-      setTimeout(() => setSlideDirection(''), 300);
+      setTimeout(() => setSlideDirection(''), 500);
     }
   };
 
@@ -90,8 +90,8 @@ const CalendarView = ({ tasks, selectedDate, onSelectDate }) => {
       <div 
         className={`calendar-grid ${slideDirection}`} 
         style={{ 
-          animation: slideDirection === 'slide-left' ? 'slideInRightCalendar 0.3s ease-out' : 
-                     slideDirection === 'slide-right' ? 'slideInLeftCalendar 0.3s ease-out' : 'none' 
+          animation: slideDirection === 'slide-left' ? 'slideInRightCalendar 0.5s cubic-bezier(0.16, 1, 0.3, 1)' : 
+                     slideDirection === 'slide-right' ? 'slideInLeftCalendar 0.5s cubic-bezier(0.16, 1, 0.3, 1)' : 'none' 
         }}
       >
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
