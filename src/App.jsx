@@ -312,11 +312,7 @@ function App() {
       <Header 
         userName={userName} 
         streak={streak} 
-        displayDate={(() => {
-          const d = new Date();
-          d.setHours(d.getHours() - dayStartHour);
-          return `${d.getDate()} ${d.toLocaleDateString('en-US', { weekday: 'short' })}`;
-        })()}
+        dayStartHour={dayStartHour}
       />
       <main>
         {activeTab === 'analytics' ? (

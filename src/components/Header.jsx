@@ -1,14 +1,26 @@
 import { useEffect, useState } from 'react';
 
-export default function Header({ userName, streak, displayDate }) {
+export default function Header({ userName, streak, dayStartHour }) {
   const [greeting, setGreeting] = useState('Welcome');
+  const [displayDate, setDisplayDate] = useState('');
 
   useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting('Good morning');
-    else if (hour < 18) setGreeting('Good afternoon');
-    else setGreeting('Good evening');
-  }, []);
+    const updateTime = () => {
+      const now = new Date();
+      const hour = now.getHours();
+      if (hour < 12) setGreeting('Good morning');
+      else if (hour < 18) setGreeting('Good afternoon');
+      else setGreeting('Good evening');
+
+      const d = new Date(now);
+      d.setHours(d.getHours() - (dayStartHour || 0));
+      setDisplayDate(`${d.getDate()} ${d.toLocaleDateString('en-US', { weekday: 'short' })}`);
+    };
+
+    updateTime();
+    const interval = setInterval(updateTime, 60000);
+    return () => clearInterval(interval);
+  }, [dayStartHour]);
 
   return (
     <header className="app-header" style={{ paddingRight: '60px' }}>
