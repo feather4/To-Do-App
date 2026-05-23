@@ -6,6 +6,7 @@
 
 .theme-midnight {
   --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  --solid-bg: #1e293b;
   --card-bg: rgba(30, 41, 59, 0.7);
   --card-border: rgba(255, 255, 255, 0.1);
   --text-main: #f8fafc;
@@ -19,6 +20,7 @@
 
 .theme-sakura {
   --bg-gradient: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+  --solid-bg: #fdf2f8;
   --card-bg: rgba(255, 255, 255, 0.8);
   --card-border: rgba(244, 114, 182, 0.3);
   --text-main: #831843;
@@ -32,6 +34,7 @@
 
 .theme-forest {
   --bg-gradient: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  --solid-bg: #ecfdf5;
   --card-bg: rgba(255, 255, 255, 0.8);
   --card-border: rgba(16, 185, 129, 0.3);
   --text-main: #064e3b;
@@ -45,6 +48,7 @@
 
 .theme-cyberpunk {
   --bg-gradient: linear-gradient(135deg, #09090b 0%, #18181b 100%);
+  --solid-bg: #09090b;
   --card-bg: rgba(24, 24, 27, 0.8);
   --card-border: rgba(250, 204, 21, 0.3);
   --text-main: #fef08a;
