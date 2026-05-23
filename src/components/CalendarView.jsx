@@ -30,6 +30,31 @@ const CalendarView = ({ tasks, selectedDate, onSelectDate }) => {
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
+  const [slideDirection, setSlideDirection] = useState('');
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [isMouseDown, setIsMouseDown] = useState(false);
+
+  const handleDragStart = (clientX) => {
+    setTouchStartX(clientX);
+    setIsMouseDown(true);
+  };
+
+  const handleDragEnd = (clientX) => {
+    if (!isMouseDown) return;
+    setIsMouseDown(false);
+    const diff = touchStartX - clientX;
+
+    if (diff > 50) {
+      setSlideDirection('slide-left');
+      nextMonth();
+      setTimeout(() => setSlideDirection(''), 300);
+    } else if (diff < -50) {
+      setSlideDirection('slide-right');
+      prevMonth();
+      setTimeout(() => setSlideDirection(''), 300);
+    }
+  };
+
   const monthNames = ["January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"];
 
@@ -50,13 +75,25 @@ const CalendarView = ({ tasks, selectedDate, onSelectDate }) => {
   })();
 
   return (
-    <div className="calendar-container">
-      <div className="calendar-header">
-        <button onClick={prevMonth} className="calendar-nav-btn">&lt;</button>
-        <h2 className="calendar-title">{monthNames[month]} {year}</h2>
-        <button onClick={nextMonth} className="calendar-nav-btn">&gt;</button>
+    <div 
+      className="calendar-container"
+      onTouchStart={(e) => handleDragStart(e.changedTouches[0].screenX)}
+      onTouchEnd={(e) => handleDragEnd(e.changedTouches[0].screenX)}
+      onMouseDown={(e) => handleDragStart(e.screenX)}
+      onMouseUp={(e) => handleDragEnd(e.screenX)}
+      onMouseLeave={(e) => isMouseDown && handleDragEnd(e.screenX)}
+      style={{ overflow: 'hidden', touchAction: 'pan-y' }}
+    >
+      <div className="calendar-header" style={{ justifyContent: 'center' }}>
+        <h2 className="calendar-title" style={{ fontSize: '1.25rem' }}>{monthNames[month]} {year}</h2>
       </div>
-      <div className="calendar-grid">
+      <div 
+        className={`calendar-grid ${slideDirection}`} 
+        style={{ 
+          animation: slideDirection === 'slide-left' ? 'slideInRightCalendar 0.3s ease-out' : 
+                     slideDirection === 'slide-right' ? 'slideInLeftCalendar 0.3s ease-out' : 'none' 
+        }}
+      >
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
           <div key={day} className="calendar-day-name">{day}</div>
         ))}
