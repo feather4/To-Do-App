@@ -27,10 +27,10 @@ export default function TaskBoard({
 
   const filteredTasks = activeTab === 'calendar' 
     ? tasks.filter(t => t.date === selectedCalendarDate)
-    : tasks.filter(t => t.category === activeTab);
+    : tasks.filter(t => t.category === activeTab && t.date <= currentDateString);
 
   // Progress Bar calculation for daily tasks
-  const dailyTasks = tasks.filter(t => t.category === 'daily');
+  const dailyTasks = tasks.filter(t => t.category === 'daily' && t.date <= currentDateString);
   const completedDaily = dailyTasks.filter(t => t.completed).length;
   const progressPercent = dailyTasks.length > 0 ? (completedDaily / dailyTasks.length) * 100 : 0;
   const allDailyDone = dailyTasks.length > 0 && completedDaily === dailyTasks.length;

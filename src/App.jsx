@@ -312,7 +312,16 @@ function App() {
       <Header 
         userName={userName} 
         streak={streak} 
-        dayStartHour={dayStartHour}
+        isNightOwlGracePeriod={new Date().getDate() !== (() => {
+          const d = new Date();
+          d.setHours(d.getHours() - dayStartHour);
+          return d.getDate();
+        })()}
+        displayDate={(() => {
+          const d = new Date();
+          d.setHours(d.getHours() - dayStartHour);
+          return `${d.getDate()} ${d.toLocaleDateString('en-US', { weekday: 'short' })}`;
+        })()}
       />
       <main>
         {activeTab === 'analytics' ? (
