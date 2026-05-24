@@ -43,10 +43,18 @@ const icons = {
       <line x1="12" y1="5" x2="12" y2="19"></line>
       <line x1="5" y1="12" x2="19" y2="12"></line>
     </svg>
+  ),
+  mic: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+      <line x1="12" y1="19" x2="12" y2="23"></line>
+      <line x1="8" y1="23" x2="16" y2="23"></line>
+    </svg>
   )
 };
 
-export default function BottomNav({ activeTab, onTabChange, onTimerClick, onAddClick, isAdding }) {
+export default function BottomNav({ activeTab, onTabChange, onTimerClick, onAddClick, isAdding, onMicClick, isListening }) {
   return (
     <nav className="bottom-nav">
       <div className="bottom-nav-container">
@@ -66,26 +74,50 @@ export default function BottomNav({ activeTab, onTabChange, onTimerClick, onAddC
           {icons.calendar}
         </button>
 
-        <button 
-          className={`nav-item add-btn ${isAdding ? 'rotate' : ''}`} 
-          onClick={onAddClick}
-          title="Add Task"
-          style={{
-            background: 'var(--primary-gradient)',
-            color: 'white',
-            borderRadius: '50%',
-            width: '48px',
-            height: '48px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transform: 'translateY(-20px)',
-            boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
-            border: '4px solid var(--bg-main, #ffffff)' // Adjust border to match background if possible
-          }}
-        >
-          {icons.add}
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', transform: 'translateY(-20px)', gap: '4px' }}>
+          <button 
+            className={`nav-item add-btn ${isAdding ? 'rotate' : ''}`} 
+            onClick={onAddClick}
+            title="Add Task"
+            style={{
+              background: 'var(--primary-gradient)',
+              color: 'white',
+              borderRadius: '50%',
+              width: '48px',
+              height: '48px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+              border: '4px solid var(--bg-main, #ffffff)',
+              margin: 0
+            }}
+          >
+            {icons.add}
+          </button>
+          
+          <button
+            onClick={onMicClick}
+            title="Voice Command"
+            style={{
+               background: isListening ? '#ef4444' : 'var(--card-bg, #ffffff)',
+               color: isListening ? 'white' : 'var(--text-main)',
+               borderRadius: '50%',
+               width: '36px',
+               height: '36px',
+               display: 'flex',
+               alignItems: 'center',
+               justifyContent: 'center',
+               border: '2px solid var(--card-border, #e5e7eb)',
+               boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+               cursor: 'pointer',
+               animation: isListening ? 'pulse 1.5s infinite' : 'none',
+               margin: 0
+            }}
+          >
+             {icons.mic}
+          </button>
+        </div>
 
         <button 
           className={`nav-item ${activeTab === 'analytics' ? 'active' : ''}`} 

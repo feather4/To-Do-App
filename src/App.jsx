@@ -9,6 +9,9 @@ import { playDingSound } from './utils/sound';
 import confetti from 'canvas-confetti';
 import { arrayMove } from '@dnd-kit/sortable';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import useSpeechRecognition from './hooks/useSpeechRecognition';
+import { extractTaskFromSpeech } from './utils/aiHelper';
+import VoiceRecorderModal from './components/VoiceRecorderModal';
 
 const getTodayDateString = (dayStartHour = 0) => {
   const d = new Date();
@@ -35,6 +38,11 @@ function App() {
   const [activeTab, setActiveTab] = useState('daily');
   const [isTimerOpen, setIsTimerOpen] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+
+  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gamified-todo-gemini-key') || '');
+  const [isProcessingVoice, setIsProcessingVoice] = useState(false);
+
+  const { isListening, transcript, error, startListening, stopListening } = useSpeechRecognition();
 
   const [tasks, setTasks] = useState(() => {
     const saved = localStorage.getItem('gamified-todo-tasks');
@@ -247,6 +255,36 @@ function App() {
     }
   };
 
+  // Persist API key
+  useEffect(() => {
+    localStorage.setItem('gamified-todo-gemini-key', geminiApiKey);
+  }, [geminiApiKey]);
+
+  // Voice Processing Effect
+  useEffect(() => {
+    if (!isListening && transcript && !isProcessingVoice) {
+      const processVoice = async () => {
+        setIsProcessingVoice(true);
+        try {
+          if (!geminiApiKey) {
+            alert('Please add your Gemini API Key in Settings to use voice commands.');
+            return;
+          }
+          const extractedTask = await extractTaskFromSpeech(transcript, geminiApiKey);
+          if (extractedTask) {
+            handleAddTask(extractedTask, 'daily', getTodayDateString(dayStartHour));
+            playDingSound();
+          }
+        } catch (err) {
+          alert('Error processing voice task: ' + err.message);
+        } finally {
+          setIsProcessingVoice(false);
+        }
+      };
+      processVoice();
+    }
+  }, [isListening, transcript]);
+
   return (
     <>
       <SettingsModal 
@@ -254,6 +292,14 @@ function App() {
         onThemeChange={setCurrentTheme} 
         dayStartHour={dayStartHour}
         onDayStartChange={setDayStartHour}
+        geminiApiKey={geminiApiKey}
+        onGeminiApiKeyChange={setGeminiApiKey}
+      />
+
+      <VoiceRecorderModal 
+        isListening={isListening} 
+        isProcessing={isProcessingVoice} 
+        transcript={transcript} 
       />
 
       {showNamePrompt && (
@@ -353,6 +399,12 @@ function App() {
           Haptics.impact({ style: ImpactStyle.Light }).catch(() => { });
         }}
         onTimerClick={() => setIsTimerOpen(true)}
+        onMicClick={() => {
+          if (isListening) stopListening();
+          else startListening();
+          Haptics.impact({ style: ImpactStyle.Light }).catch(() => { });
+        }}
+        isListening={isListening}
       />
 
       {/* Undo Delete Toast */}

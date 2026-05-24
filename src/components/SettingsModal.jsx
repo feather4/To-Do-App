@@ -9,7 +9,7 @@ const themes = [
   { id: 'theme-cyberpunk', name: 'Cyberpunk', color1: '#18181b', color2: '#facc15' },
 ];
 
-export default function SettingsModal({ currentTheme, onThemeChange, dayStartHour, onDayStartChange }) {
+export default function SettingsModal({ currentTheme, onThemeChange, dayStartHour, onDayStartChange, geminiApiKey, onGeminiApiKeyChange }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleOpen = async () => {
@@ -144,6 +144,30 @@ export default function SettingsModal({ currentTheme, onThemeChange, dayStartHou
                 <option value={5}>5:00 AM</option>
                 <option value={6}>6:00 AM</option>
               </select>
+            </div>
+
+            <div style={{ borderTop: '1px solid var(--card-border)', paddingTop: '1.5rem' }}>
+              <h4 style={{ marginBottom: '0.5rem', color: 'var(--text-main)', fontSize: '1.125rem' }}>Voice AI (Gemini)</h4>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: '1.4' }}>
+                Provide a Google Gemini API Key to enable smart voice commands.
+              </p>
+              <input 
+                type="password"
+                placeholder="Enter Gemini API Key"
+                value={geminiApiKey}
+                onChange={(e) => onGeminiApiKeyChange(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid var(--card-border)',
+                  background: 'rgba(255,255,255,0.5)',
+                  color: 'var(--text-main)',
+                  fontWeight: '600',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
             </div>
 
           </div>
