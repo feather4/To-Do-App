@@ -11,39 +11,50 @@ export default function useSpeechRecognition() {
     setError(null);
     setTranscript('');
     
-    // Check for browser support
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setError('Speech recognition is not supported in this browser.');
-      return;
-    }
+    // Explicitly request microphone permission first to force the browser prompt
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then((stream) => {
+        // We just needed permission, so stop the tracks immediately
+        stream.getTracks().forEach(track => track.stop());
 
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
+        // Check for browser support
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+          setError('Speech recognition is not supported in this browser.');
+          return;
+        }
 
-    recognition.onstart = () => {
-      setIsListening(true);
-    };
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
 
-    recognition.onresult = (event) => {
-      const speechResult = event.results[0][0].transcript;
-      setTranscript(speechResult);
-    };
+        recognition.onstart = () => {
+          setIsListening(true);
+        };
 
-    recognition.onerror = (event) => {
-      console.error('Speech recognition error', event.error);
-      setError(event.error);
-      setIsListening(false);
-    };
+        recognition.onresult = (event) => {
+          const speechResult = event.results[0][0].transcript;
+          setTranscript(speechResult);
+        };
 
-    recognition.onend = () => {
-      setIsListening(false);
-    };
+        recognition.onerror = (event) => {
+          console.error('Speech recognition error', event.error);
+          setError(event.error);
+          setIsListening(false);
+        };
 
-    recognitionRef.current = recognition;
-    recognition.start();
+        recognition.onend = () => {
+          setIsListening(false);
+        };
+
+        recognitionRef.current = recognition;
+        recognition.start();
+      })
+      .catch((err) => {
+        console.error('Microphone permission error:', err);
+        setError('Microphone permission was denied. Please allow it in your browser/app settings.');
+      });
   }, []);
 
   const stopListening = useCallback(() => {
