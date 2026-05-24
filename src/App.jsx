@@ -44,6 +44,13 @@ function App() {
 
   const { isListening, transcript, error, startListening, stopListening } = useSpeechRecognition();
 
+  useEffect(() => {
+    if (error) {
+      alert(`Speech recognition error: ${error}`);
+    }
+  }, [error]);
+
+
   const [tasks, setTasks] = useState(() => {
     const saved = localStorage.getItem('gamified-todo-tasks');
     if (saved) {
