@@ -48,7 +48,7 @@ export default function AnalyticsDashboard({ tasks, pomodoroHistory }) {
   }, [tasks, pomodoroHistory]);
 
   return (
-    <div className="analytics-dashboard" style={{ padding: '0.5rem' }}>
+    <div className="analytics-dashboard" style={{ padding: '0.5rem', marginBottom: '90px' }}>
       <div className="board-header" style={{ marginBottom: '1.5rem' }}>
         <h3 style={{ fontSize: '1.5rem', color: 'var(--text-main)', fontWeight: '800' }}>
           Your Productivity
