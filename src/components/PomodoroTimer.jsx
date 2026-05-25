@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Haptics, NotificationType, ImpactStyle } from '@capacitor/haptics';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { playTimerRingSound, playDingSound } from '../utils/sound';
 
 export default function PomodoroTimer({ isOpen, onClose, history, onSaveSession }) {
@@ -13,12 +14,52 @@ export default function PomodoroTimer({ isOpen, onClose, history, onSaveSession 
 
   // Running State
   const [timeLeft, setTimeLeft] = useState(0);
+  const [targetEndTime, setTargetEndTime] = useState(null);
   const [currentPhase, setCurrentPhase] = useState('work'); // 'work' or 'break'
   const [currentLoop, setCurrentLoop] = useState(1);
   const [isActive, setIsActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
 
   const timerRef = useRef(null);
+
+  useEffect(() => {
+    const requestPermissions = async () => {
+      try {
+        await LocalNotifications.requestPermissions();
+      } catch (e) {
+        console.warn('LocalNotifications permissions request failed', e);
+      }
+    };
+    requestPermissions();
+  }, []);
+
+  const scheduleNotification = async (durationMinutes, phase, sName) => {
+    const fireTime = new Date(Date.now() + durationMinutes * 60 * 1000);
+    try {
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: phase === 'work' ? 'Focus Session Complete!' : 'Break Time Over!',
+            body: phase === 'work' ? `Great job on ${sName}! Time for a break.` : 'Time to get back to focus!',
+            id: 1, 
+            schedule: { at: fireTime },
+            actionTypeId: '',
+            extra: null
+          }
+        ]
+      });
+    } catch (e) {
+      console.warn('Failed to schedule notification', e);
+    }
+  };
+
+  const cancelNotification = async () => {
+    try {
+      await LocalNotifications.cancel({ notifications: [{ id: 1 }] });
+    } catch (e) {
+      console.warn('Failed to cancel notification', e);
+    }
+  };
 
   // Start Session
   const handleStart = async () => {
@@ -29,6 +70,9 @@ export default function PomodoroTimer({ isOpen, onClose, history, onSaveSession 
     
     await Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => {});
     setTimeLeft(workDuration * 60);
+    setTargetEndTime(Date.now() + workDuration * 60 * 1000);
+    scheduleNotification(workDuration, 'work', sessionName);
+    
     setCurrentPhase('work');
     setCurrentLoop(1);
     setIsActive(true);
@@ -38,16 +82,20 @@ export default function PomodoroTimer({ isOpen, onClose, history, onSaveSession 
 
   // Timer Logic
   useEffect(() => {
-    if (isActive && !isPaused && timeLeft > 0) {
+    if (isActive && !isPaused && targetEndTime) {
       timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
+        const now = Date.now();
+        if (now >= targetEndTime) {
+          setTimeLeft(0);
+          handlePhaseComplete();
+        } else {
+          setTimeLeft(Math.ceil((targetEndTime - now) / 1000));
+        }
       }, 1000);
-    } else if (isActive && timeLeft === 0) {
-      handlePhaseComplete();
     }
 
     return () => clearInterval(timerRef.current);
-  }, [isActive, isPaused, timeLeft]);
+  }, [isActive, isPaused, targetEndTime]);
 
   const handlePhaseComplete = async () => {
     playTimerRingSound();
@@ -60,17 +108,23 @@ export default function PomodoroTimer({ isOpen, onClose, history, onSaveSession 
       } else {
         setCurrentPhase('break');
         setTimeLeft(breakDuration * 60);
+        setTargetEndTime(Date.now() + breakDuration * 60 * 1000);
+        scheduleNotification(breakDuration, 'break', sessionName);
       }
     } else {
       // Break done, back to work
       setCurrentPhase('work');
       setCurrentLoop((prev) => prev + 1);
       setTimeLeft(workDuration * 60);
+      setTargetEndTime(Date.now() + workDuration * 60 * 1000);
+      scheduleNotification(workDuration, 'work', sessionName);
     }
   };
 
   const finishSession = (completed) => {
+    cancelNotification();
     setIsActive(false);
+    setTargetEndTime(null);
     clearInterval(timerRef.current);
     
     // Save to history
@@ -100,6 +154,16 @@ export default function PomodoroTimer({ isOpen, onClose, history, onSaveSession 
 
   const togglePause = async () => {
     await Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+    if (isPaused) {
+      // Resuming
+      const newTarget = Date.now() + timeLeft * 1000;
+      setTargetEndTime(newTarget);
+      scheduleNotification(timeLeft / 60, currentPhase, sessionName);
+    } else {
+      // Pausing
+      cancelNotification();
+      setTargetEndTime(null);
+    }
     setIsPaused(!isPaused);
   };
 
