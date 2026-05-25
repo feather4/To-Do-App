@@ -1658,3 +1658,71 @@ body {
   0% { opacity: 0; transform: translateX(-30%) scale(0.95); }
   100% { opacity: 1; transform: translateX(0) scale(1); }
 }
+
+/* Minimized Pomodoro Timer */
+.pomo-minimized-wrapper {
+  position: fixed;
+  bottom: 85px; /* Sits exactly above the footer/bottom nav */
+  left: 0;
+  right: 0;
+  pointer-events: none; /* Let clicks pass through empty space */
+  display: flex;
+  justify-content: center;
+  z-index: 998;
+}
+
+.pomo-minimized-container {
+  width: 100%;
+  max-width: 500px;
+  padding: 0 1rem;
+  display: flex;
+  justify-content: flex-end; /* Align right side, above the timer icon */
+}
+
+.pomo-minimized {
+  pointer-events: auto; /* Re-enable clicks */
+  background: var(--card-bg);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  color: var(--text-main);
+  padding: 0.5rem 0.75rem;
+  border-radius: 1rem;
+  box-shadow: var(--shadow-hover);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1.5px solid var(--accent-main);
+  animation: slideUpBottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  min-width: 70px;
+  transition: transform 0.2s;
+}
+
+.pomo-minimized:active {
+  transform: scale(0.95);
+}
+
+.pomo-min-phase {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.15rem;
+  color: var(--text-muted);
+}
+
+.pomo-min-phase.work {
+  color: var(--accent-main);
+}
+
+.pomo-min-phase.break {
+  color: #10b981;
+}
+
+.pomo-min-time {
+  font-size: 1.15rem;
+  font-weight: 900;
+  font-family: monospace;
+  line-height: 1;
+}

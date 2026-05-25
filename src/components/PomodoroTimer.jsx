@@ -3,7 +3,7 @@ import { Haptics, NotificationType, ImpactStyle } from '@capacitor/haptics';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { playTimerRingSound, playDingSound } from '../utils/sound';
 
-export default function PomodoroTimer({ isOpen, onClose, history, onSaveSession }) {
+export default function PomodoroTimer({ isOpen, onClose, onOpen, history, onSaveSession }) {
   const [view, setView] = useState('setup'); // 'setup', 'running', 'history'
   
   // Setup State
@@ -179,6 +179,22 @@ export default function PomodoroTimer({ isOpen, onClose, history, onSaveSession 
     : ((breakDuration * 60 - timeLeft) / (breakDuration * 60)) * 100;
 
   if (!isOpen) {
+    if (isActive) {
+      return (
+        <div className="pomo-minimized-wrapper">
+          <div className="pomo-minimized-container">
+            <div className="pomo-minimized" onClick={onOpen} title="Open Timer">
+              <div className={`pomo-min-phase ${currentPhase}`}>
+                {currentPhase === 'work' ? '🧠 Focus' : '☕ Break'}
+              </div>
+              <div className="pomo-min-time">
+                {formatTime(timeLeft)}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
     return null;
   }
 
