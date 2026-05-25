@@ -25,12 +25,16 @@ export default function TaskBoard({
   const [tabKey, setTabKey] = useState(0); // forces re-render for stagger
   const inputRef = useRef(null);
 
-  const filteredTasks = activeTab === 'calendar' 
+  const filteredTasks = (activeTab === 'calendar' 
     ? tasks.filter(t => t.date === selectedCalendarDate)
-    : tasks.filter(t => t.category === activeTab && t.date <= currentDateString);
+    : tasks.filter(t => t.category === activeTab && t.date === currentDateString)
+  ).sort((a, b) => {
+    if (a.completed === b.completed) return 0;
+    return a.completed ? 1 : -1;
+  });
 
   // Progress Bar calculation for daily tasks
-  const dailyTasks = tasks.filter(t => t.category === 'daily' && t.date <= currentDateString);
+  const dailyTasks = tasks.filter(t => t.category === 'daily' && t.date === currentDateString);
   const completedDaily = dailyTasks.filter(t => t.completed).length;
   const progressPercent = dailyTasks.length > 0 ? (completedDaily / dailyTasks.length) * 100 : 0;
   const allDailyDone = dailyTasks.length > 0 && completedDaily === dailyTasks.length;
