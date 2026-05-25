@@ -406,12 +406,6 @@ function App() {
           Haptics.impact({ style: ImpactStyle.Light }).catch(() => { });
         }}
         onTimerClick={() => setIsTimerOpen(true)}
-        onMicClick={() => {
-          if (isListening) stopListening();
-          else startListening();
-          Haptics.impact({ style: ImpactStyle.Light }).catch(() => { });
-        }}
-        isListening={isListening}
       />
 
       {/* Undo Delete Toast */}

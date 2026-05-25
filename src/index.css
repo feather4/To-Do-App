@@ -1496,6 +1496,8 @@ body {
   border-top: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
   z-index: 999;
+  height: 52px;
+  box-sizing: content-box;
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
@@ -1505,7 +1507,8 @@ body {
   align-items: center;
   max-width: 500px;
   margin: 0 auto;
-  padding: 0.25rem 1rem;
+  height: 100%;
+  padding: 0 1rem;
 }
 
 .nav-item {
@@ -1659,10 +1662,9 @@ body {
   100% { opacity: 1; transform: translateX(0) scale(1); }
 }
 
-/* Minimized Pomodoro Timer */
 .pomo-minimized-wrapper {
   position: fixed;
-  bottom: 85px; /* Sits exactly above the footer/bottom nav */
+  bottom: calc(50px + env(safe-area-inset-bottom, 0px)); /* Slighly overlaps the 52px footer to align perfectly */
   left: 0;
   right: 0;
   pointer-events: none; /* Let clicks pass through empty space */
@@ -1676,26 +1678,23 @@ body {
   max-width: 500px;
   padding: 0 1rem;
   display: flex;
-  justify-content: flex-end; /* Align right side, above the timer icon */
 }
 
 .pomo-minimized {
   pointer-events: auto; /* Re-enable clicks */
-  background: var(--card-bg);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
+  background: var(--solid-bg);
   color: var(--text-main);
-  padding: 0.5rem 0.75rem;
-  border-radius: 1rem;
-  box-shadow: var(--shadow-hover);
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.5rem 0.5rem 0 0; /* Rounded top, flat bottom to attach to footer */
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   border: 1.5px solid var(--accent-main);
+  border-bottom: none; /* Merges visually with the footer top border */
   animation: slideUpBottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  min-width: 70px;
+  min-width: 65px;
   transition: transform 0.2s;
 }
 
@@ -1703,25 +1702,8 @@ body {
   transform: scale(0.95);
 }
 
-.pomo-min-phase {
-  font-size: 0.65rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.15rem;
-  color: var(--text-muted);
-}
-
-.pomo-min-phase.work {
-  color: var(--accent-main);
-}
-
-.pomo-min-phase.break {
-  color: #10b981;
-}
-
 .pomo-min-time {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 900;
   font-family: monospace;
   line-height: 1;

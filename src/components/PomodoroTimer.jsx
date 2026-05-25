@@ -182,13 +182,17 @@ export default function PomodoroTimer({ isOpen, onClose, onOpen, history, onSave
     if (isActive) {
       return (
         <div className="pomo-minimized-wrapper">
-          <div className="pomo-minimized-container">
-            <div className="pomo-minimized" onClick={onOpen} title="Open Timer">
-              <div className={`pomo-min-phase ${currentPhase}`}>
-                {currentPhase === 'work' ? '🧠 Focus' : '☕ Break'}
-              </div>
-              <div className="pomo-min-time">
-                {formatTime(timeLeft)}
+          <div className="pomo-minimized-container" style={{ justifyContent: 'space-between' }}>
+            <div style={{ flex: 1 }} />
+            <div style={{ flex: 1 }} />
+            <div style={{ width: '48px', margin: '0 8px', flexShrink: 0 }} />
+            <div style={{ flex: 1 }} />
+            <div style={{ width: '1px', margin: '0 0.5rem', flexShrink: 0 }} />
+            <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'flex-end' }}>
+              <div className="pomo-minimized" onClick={onOpen} title="Open Timer">
+                <div className="pomo-min-time">
+                  {formatTime(timeLeft)}
+                </div>
               </div>
             </div>
           </div>
