@@ -152,6 +152,7 @@ function App() {
   };
 
   const handleCompleteTask = (taskId, startPos) => {
+    Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
     setTasks(prevTasks => prevTasks.map(task => {
       if (task.id === taskId) {
         const isCompleting = !task.completed;
@@ -187,6 +188,7 @@ function App() {
   };
 
   const handleDeleteTask = (taskId) => {
+    Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
     clearUndoTimers();
     setTasks(prevTasks => {
       const index = prevTasks.findIndex(task => task.id === taskId);
@@ -229,6 +231,7 @@ function App() {
   };
 
   const handleAddTask = (title, category, date) => {
+    Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => {});
     if (!date) date = getTodayDateString(dayStartHour);
     const newTask = {
       id: Date.now().toString(),
@@ -243,6 +246,7 @@ function App() {
   const handleDragEnd = (event) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
+      Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
       setTasks((prevTasks) => {
         const activeTask = prevTasks.find(t => t.id === active.id);
         if (!activeTask) return prevTasks;
